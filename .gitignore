@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+env/
+.venv/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Keep git lean: ignore raw 83MB uncompressed JSON (News_Category_Dataset_v3.json.gz is tracked instead)
+News_Category_Dataset_v3.json
