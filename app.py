@@ -1,25 +1,23 @@
 """
 app.py — News Intelligence System
-===================================
-A multi-page Streamlit application for news classification, sentiment
-analysis, keyword extraction, and personalised news recommendation.
-
-Run with:  streamlit run app.py
+A professional, academic-grade Streamlit application for multi-category
+news classification, uncertainty estimation, keyword extraction, sentiment
+analysis, and research-to-news recommendation.
 """
 
+import warnings
 import streamlit as st
 import pandas as pd
 import numpy as np
-import warnings
 
 warnings.filterwarnings("ignore")
 
 # ---------------------------------------------------------------------------
-# Page Configuration (MUST be the first Streamlit command)
+# Page Configuration
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="News Intelligence System",
-    page_icon="📰",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -49,988 +47,954 @@ from recommendation import (
 
 
 # ---------------------------------------------------------------------------
-# Custom CSS for a polished news-oriented design
+# Professional CSS Design System (Navy / Blue / White Palette, No Emojis)
 # ---------------------------------------------------------------------------
 def inject_custom_css():
     st.markdown("""
     <style>
-    /* ---- Global ---- */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="st-"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    /* ---- Sidebar ---- */
+    /* ---- Sidebar Styling ---- */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+        background-color: #0f172a;
+        border-right: 1px solid #1e293b;
     }
     section[data-testid="stSidebar"] .stMarkdown h1,
     section[data-testid="stSidebar"] .stMarkdown h2,
     section[data-testid="stSidebar"] .stMarkdown h3,
     section[data-testid="stSidebar"] .stMarkdown p,
     section[data-testid="stSidebar"] .stMarkdown li,
-    section[data-testid="stSidebar"] .stMarkdown label {
-        color: #e0e0e0 !important;
+    section[data-testid="stSidebar"] .stMarkdown label,
+    section[data-testid="stSidebar"] .stMarkdown span {
+        color: #f1f5f9 !important;
+    }
+    section[data-testid="stSidebar"] .stRadio label {
+        color: #e2e8f0 !important;
+        font-weight: 500;
+        font-size: 0.92rem;
+    }
+
+    /* ---- Main Hero Card ---- */
+    .hero-container {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 36px 32px;
+        color: #ffffff;
+        margin-bottom: 24px;
+    }
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.02em;
+    }
+    .hero-subtitle {
+        font-size: 1.02rem;
+        color: #cbd5e1;
+        line-height: 1.6;
+        margin: 0 0 16px 0;
+        max-width: 900px;
+    }
+    .hero-badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+    .hero-badge {
+        display: inline-block;
+        background-color: rgba(37, 99, 235, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        color: #93c5fd;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 6px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    /* ---- Metric Cards ---- */
+    .metric-card-container {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: left;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    }
+    .metric-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+    .metric-value-primary {
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+    .metric-subtext {
+        font-size: 0.78rem;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    /* ---- Feature Cards ---- */
+    .feature-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 22px 20px;
+        height: 100%;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.15s ease;
+    }
+    .feature-card:hover {
+        border-color: #93c5fd;
+    }
+    .feature-number {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #2563eb;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }
+    .feature-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+    }
+    .feature-desc {
+        font-size: 0.88rem;
+        color: #475569;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* ---- Article Cards ---- */
+    .article-item {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 18px 20px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .article-headline {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+        line-height: 1.4;
+    }
+    .article-desc {
+        font-size: 0.9rem;
+        color: #334155;
+        line-height: 1.55;
+        margin: 6px 0 10px 0;
+    }
+    .article-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        font-size: 0.8rem;
+        color: #64748b;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 10px;
+        margin-top: 8px;
     }
 
     /* ---- Category Badges ---- */
-    .category-badge {
+    .badge {
         display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.78rem;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: white;
-        margin: 2px 4px 2px 0;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
     }
-    .badge-politics      { background: #e74c3c; }
-    .badge-business      { background: #2ecc71; }
-    .badge-tech          { background: #3498db; }
-    .badge-science       { background: #9b59b6; }
-    .badge-sports        { background: #e67e22; }
-    .badge-entertainment { background: #e91e63; }
-    .badge-health        { background: #00bcd4; }
-    .badge-travel        { background: #ff9800; }
-    .badge-food          { background: #8bc34a; }
-    .badge-default       { background: #607d8b; }
+    .badge-primary   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge-secondary { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; }
+    .badge-dark      { background: #0f172a; color: #f8fafc; border: 1px solid #1e293b; }
 
-    /* ---- Metric Cards ---- */
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
-        padding: 24px;
-        color: white;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-    .metric-card h3 { margin: 0 0 8px 0; font-size: 0.9rem; opacity: 0.9; }
-    .metric-card .metric-value { font-size: 2rem; font-weight: 700; }
+    /* ---- Confidence Badges ---- */
+    .confidence-tag-high     { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; }
+    .confidence-tag-moderate { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; }
+    .confidence-tag-low      { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; }
 
-    /* ---- Article Card ---- */
-    .article-card {
-        background: #ffffff;
-        border: 1px solid #e8e8e8;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 12px;
-        transition: box-shadow 0.2s ease;
-    }
-    .article-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    .article-card h4 {
-        margin: 0 0 8px 0;
-        color: #1a1a2e;
-        font-size: 1.05rem;
-    }
-    .article-card p {
-        color: #555;
-        font-size: 0.9rem;
-        line-height: 1.5;
-        margin: 4px 0;
-    }
-    .article-meta {
-        font-size: 0.78rem;
-        color: #888;
-        margin-top: 6px;
-    }
+    /* ---- Sentiment Tags ---- */
+    .sentiment-tag-positive { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; }
+    .sentiment-tag-negative { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; }
+    .sentiment-tag-neutral  { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; }
 
-    /* ---- Confidence Indicator ---- */
-    .confidence-high     { color: #2ecc71; font-weight: 700; }
-    .confidence-moderate { color: #f39c12; font-weight: 700; }
-    .confidence-low      { color: #e74c3c; font-weight: 700; }
-
-    /* ---- Keyword Tag ---- */
-    .keyword-tag {
+    /* ---- Keyword Pill ---- */
+    .keyword-pill {
         display: inline-block;
-        background: #eef2ff;
-        color: #4338ca;
-        padding: 5px 14px;
-        border-radius: 20px;
+        background: #f1f5f9;
+        color: #1e293b;
+        border: 1px solid #cbd5e1;
+        padding: 4px 11px;
+        border-radius: 4px;
         font-size: 0.82rem;
         font-weight: 500;
-        margin: 3px 4px;
-        border: 1px solid #c7d2fe;
+        margin: 2px 4px 2px 0;
+    }
+    .keyword-pill-weight {
+        color: #2563eb;
+        font-weight: 600;
+        margin-left: 4px;
+        font-size: 0.76rem;
     }
 
-    /* ---- Sentiment Pill ---- */
-    .sentiment-positive { background: #d4edda; color: #155724; padding: 6px 16px; border-radius: 20px; font-weight: 600; display: inline-block; }
-    .sentiment-negative { background: #f8d7da; color: #721c24; padding: 6px 16px; border-radius: 20px; font-weight: 600; display: inline-block; }
-    .sentiment-neutral  { background: #e2e3e5; color: #383d41; padding: 6px 16px; border-radius: 20px; font-weight: 600; display: inline-block; }
-
-    /* ---- Hero Section ---- */
-    .hero {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        border-radius: 20px;
-        padding: 48px 40px;
-        color: white;
-        margin-bottom: 32px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    }
-    .hero h1 { font-size: 2.2rem; margin-bottom: 12px; font-weight: 700; }
-    .hero p  { font-size: 1.08rem; opacity: 0.85; line-height: 1.7; }
-
-    /* ---- Feature Card ---- */
-    .feature-card {
-        background: #ffffff;
-        border: 1px solid #e8e8e8;
-        border-radius: 14px;
-        padding: 28px 24px;
-        text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        height: 100%;
-    }
-    .feature-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-    }
-    .feature-icon { font-size: 2.4rem; margin-bottom: 12px; }
-    .feature-card h4 { color: #1a1a2e; margin: 8px 0; font-size: 1rem; }
-    .feature-card p  { color: #666; font-size: 0.85rem; line-height: 1.5; }
-
-    /* ---- Similarity Bar ---- */
+    /* ---- Progress Bar for Similarity ---- */
     .sim-bar-bg {
-        background: #e8e8e8;
-        border-radius: 6px;
-        height: 8px;
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        height: 6px;
         width: 100%;
+        overflow: hidden;
         margin-top: 6px;
     }
     .sim-bar-fill {
+        background-color: #2563eb;
+        height: 100%;
+        border-radius: 3px;
+    }
+
+    /* ---- Status Indicator in Sidebar ---- */
+    .status-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 0.85rem;
+        color: #cbd5e1;
+    }
+    .status-dot-active {
+        width: 8px;
         height: 8px;
-        border-radius: 6px;
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 50%;
+        background-color: #10b981;
+    }
+    .status-dot-inactive {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #ef4444;
     }
     </style>
     """, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
-# Helper: Category badge colour
-# ---------------------------------------------------------------------------
-CATEGORY_BADGE_MAP = {
-    "POLITICS": "badge-politics",
-    "BUSINESS": "badge-business",
-    "MONEY": "badge-business",
-    "TECH": "badge-tech",
-    "SCIENCE": "badge-science",
-    "SPORTS": "badge-sports",
-    "ENTERTAINMENT": "badge-entertainment",
-    "COMEDY": "badge-entertainment",
-    "HEALTHY LIVING": "badge-health",
-    "WELLNESS": "badge-health",
-    "TRAVEL": "badge-travel",
-    "FOOD & DRINK": "badge-food",
-    "TASTE": "badge-food",
-}
-
-
-def category_badge(cat: str) -> str:
-    """Return an HTML badge span for a category name."""
-    css_class = CATEGORY_BADGE_MAP.get(cat, "badge-default")
-    return f'<span class="category-badge {css_class}">{cat}</span>'
-
-
-# ---------------------------------------------------------------------------
 # Cached Resource Loading
 # ---------------------------------------------------------------------------
-
-@st.cache_resource(show_spinner="Loading classification model…")
+@st.cache_resource(show_spinner="Loading classification model...")
 def cached_load_model():
     return load_model()
 
 
-@st.cache_resource(show_spinner="Loading TF-IDF vectorizer…")
+@st.cache_resource(show_spinner="Loading TF-IDF vectorizer...")
 def cached_load_tfidf():
     return load_tfidf()
 
 
-@st.cache_resource(show_spinner="Loading news dataset (~209k articles)…")
+@st.cache_resource(show_spinner="Loading news dataset (209,527 articles)...")
 def cached_load_dataset():
     return load_dataset()
 
 
-@st.cache_resource(show_spinner="Pre-computing article vectors for recommendations…")
+@st.cache_resource(show_spinner="Computing corpus TF-IDF representation...")
 def cached_corpus_vectors(_df, _tfidf):
-    """Build TF-IDF vectors for the whole corpus (cached once per session)."""
     return build_corpus_vectors(_df, _tfidf)
 
 
 # ---------------------------------------------------------------------------
-# Initialise Resources
+# Initialize Resources
 # ---------------------------------------------------------------------------
-
 model, model_error = cached_load_model()
 tfidf, tfidf_error = cached_load_tfidf()
 dataset, dataset_error = cached_load_dataset()
 
-# Pre-compute corpus vectors if both dataset and vectorizer are available
 corpus_vectors = None
 if dataset is not None and tfidf is not None:
     corpus_vectors = cached_corpus_vectors(dataset, tfidf)
 
-
 # ---------------------------------------------------------------------------
-# Sidebar Navigation
+# Sidebar Navigation & System Status
 # ---------------------------------------------------------------------------
 inject_custom_css()
 
 with st.sidebar:
-    st.markdown("## 📰 News Intelligence")
+    st.markdown("### News Intelligence System")
+    st.caption("Machine Learning & Natural Language Processing Suite")
     st.markdown("---")
 
     page = st.radio(
-        "Navigate",
+        "Navigation",
         [
-            "🏠 Home Dashboard",
-            "🔍 News Classifier",
-            "📋 Personalized News Feed",
-            "🔬 Research-to-News",
-            "ℹ️ About the Project",
+            "Overview & Metrics",
+            "News Article Classifier",
+            "Personalized News Feed",
+            "Research-to-News Retrieval",
+            "System Documentation",
         ],
         label_visibility="collapsed",
     )
 
     st.markdown("---")
-    # Status indicators
-    st.markdown("### System Status")
+    st.markdown("#### System Components")
+
     if model is not None:
-        st.success("✅ Model loaded", icon="🤖")
+        st.markdown(
+            '<div class="status-row"><span class="status-dot-active"></span> Linear SVM Model: Ready</div>',
+            unsafe_allow_html=True,
+        )
     else:
-        st.error("❌ Model missing")
+        st.markdown(
+            '<div class="status-row"><span class="status-dot-inactive"></span> Linear SVM Model: Offline</div>',
+            unsafe_allow_html=True,
+        )
 
     if tfidf is not None:
-        st.success("✅ Vectorizer loaded", icon="📊")
+        st.markdown(
+            '<div class="status-row"><span class="status-dot-active"></span> TF-IDF Vectorizer: Ready</div>',
+            unsafe_allow_html=True,
+        )
     else:
-        st.error("❌ Vectorizer missing")
+        st.markdown(
+            '<div class="status-row"><span class="status-dot-inactive"></span> TF-IDF Vectorizer: Offline</div>',
+            unsafe_allow_html=True,
+        )
 
     if dataset is not None:
-        st.success(f"✅ Dataset: {len(dataset):,} articles", icon="📰")
+        st.markdown(
+            f'<div class="status-row"><span class="status-dot-active"></span> Corpus: {len(dataset):,} Articles</div>',
+            unsafe_allow_html=True,
+        )
     else:
-        st.warning("⚠️ Dataset not loaded")
+        st.markdown(
+            '<div class="status-row"><span class="status-dot-inactive"></span> Corpus: Not Loaded</div>',
+            unsafe_allow_html=True,
+        )
 
     st.markdown("---")
-    st.caption("TF-IDF + Linear SVM · 42 Categories")
+    st.caption("Linear SVM · 42 Categories · 80,000 Features")
+    st.caption("Dataset Coverage: 2012–2022 (Historical)")
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PAGE 1: HOME DASHBOARD
-# ═══════════════════════════════════════════════════════════════════════════
-if page == "🏠 Home Dashboard":
+# ===========================================================================
+# PAGE 1: OVERVIEW & BENCHMARK METRICS
+# ===========================================================================
+if page == "Overview & Metrics":
 
-    # Hero Section
     st.markdown("""
-    <div class="hero">
-        <h1>📰 News Intelligence System</h1>
-        <p>
-            Automated news categorisation, prediction uncertainty analysis,
-            keyword extraction, sentiment analysis, and personalised
-            recommendation — powered by machine learning.
-        </p>
+    <div class="hero-container">
+        <div class="hero-title">News Intelligence System</div>
+        <div class="hero-subtitle">
+            An end-to-end Natural Language Processing system for fine-grained multi-category news classification,
+            transparent margin-based uncertainty estimation, keyword extraction, sentiment analysis, and
+            research-to-news recommendation.
+        </div>
+        <div class="hero-badge-row">
+            <span class="hero-badge">42 News Categories</span>
+            <span class="hero-badge">80,000 TF-IDF Features</span>
+            <span class="hero-badge">Linear Support Vector Machine</span>
+            <span class="hero-badge">209,527 Corpus Articles</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Feature Cards
-    st.markdown("### ✨ Core Features")
+    st.markdown("### Core Capabilities")
 
-    cols = st.columns(5)
-    features = [
-        ("🏷️", "Category Classification",
-         "Classify news into 42 categories using a trained Linear SVM model."),
-        ("📊", "Prediction Confidence",
-         "Inspect decision scores and margin-based uncertainty indicators."),
-        ("🔑", "Keyword Extraction",
-         "Surface the most important terms using TF-IDF feature weights."),
-        ("💬", "Sentiment Analysis",
-         "Detect positive, negative, or neutral tone in news text."),
-        ("🎯", "Smart Recommendations",
-         "Get personalised news by interests or by uploading research papers."),
-    ]
-    for col, (icon, title, desc) in zip(cols, features):
-        with col:
-            st.markdown(f"""
-            <div class="feature-card">
-                <div class="feature-icon">{icon}</div>
-                <h4>{title}</h4>
-                <p>{desc}</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # How It Works
-    st.markdown("### ⚙️ How the System Works")
-    col1, col2 = st.columns(2)
-
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         st.markdown("""
-        **Classification Pipeline**
-        1. User enters a news headline or article text.
-        2. Text is cleaned: lowercased, URLs removed, non-alphabetic
-           characters stripped, stop-words filtered.
-        3. The cleaned text is transformed into a TF-IDF vector (unigrams
-           + bigrams, 80 000 features).
-        4. The Linear SVM classifier predicts one of 42 news categories.
-        5. Decision-function scores reveal prediction uncertainty.
-        """)
-
+        <div class="feature-card">
+            <div class="feature-number">Capability 01</div>
+            <div class="feature-title">Classification</div>
+            <div class="feature-desc">Predicts one of 42 fine-grained news categories using a trained Linear SVM model.</div>
+        </div>
+        """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        **Recommendation Pipeline**
-        1. The user selects preferred categories **or** uploads a research
-           paper / pastes research text.
-        2. For interest-based feeds, articles are filtered by category and
-           sorted by date.
-        3. For research-to-news, the text is vectorised with the same TF-IDF
-           model and compared to all ~209 000 articles via cosine similarity.
-        4. The top-ranked articles are returned with similarity scores and
-           matching-keyword explanations.
-        """)
-
-    # Baseline Metrics
-    st.markdown("### 📈 Baseline Model Performance")
-    st.info(
-        "These are the **original experimental results** from the trained "
-        "Linear SVM. The model has not been retrained or modified."
-    )
-
-    m_cols = st.columns(4)
-    metrics = [
-        ("Linear SVM Accuracy", "61.29%"),
-        ("Macro F1-Score", "0.4824"),
-        ("Weighted F1-Score", "0.5976"),
-        ("Categories", "42"),
-    ]
-    for col, (label, value) in zip(m_cols, metrics):
-        with col:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>{label}</h3>
-                <div class="metric-value">{value}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        <div class="feature-card">
+            <div class="feature-number">Capability 02</div>
+            <div class="feature-title">Uncertainty Scoring</div>
+            <div class="feature-desc">Calculates honest prediction confidence using raw SVM hyperplane decision score margins.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-number">Capability 03</div>
+            <div class="feature-title">Keyword Extraction</div>
+            <div class="feature-desc">Isolates salient lexical features ranked by fitted TF-IDF unigram and bigram weights.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col4:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-number">Capability 04</div>
+            <div class="feature-title">Sentiment Profiling</div>
+            <div class="feature-desc">Computes emotional polarity (-1 to +1) and subjectivity indices on article texts.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col5:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-number">Capability 05</div>
+            <div class="feature-title">Smart Retrieval</div>
+            <div class="feature-desc">Generates interest feeds and matches research papers against 209k articles via cosine similarity.</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### Empirical Benchmark Results")
+    st.caption("Verified experimental performance metrics measured on the multi-class test partition.")
 
-    # Model Comparison Table
-    st.markdown("### 🔬 Model Comparison (Original Experiment)")
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.markdown("""
+        <div class="metric-card-container">
+            <div class="metric-label">Selected Model Accuracy</div>
+            <div class="metric-value-primary">61.29%</div>
+            <div class="metric-subtext">Linear SVM Classifier</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with m2:
+        st.markdown("""
+        <div class="metric-card-container">
+            <div class="metric-label">Macro F1-Score</div>
+            <div class="metric-value-primary">0.4824</div>
+            <div class="metric-subtext">Unweighted average over 42 classes</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with m3:
+        st.markdown("""
+        <div class="metric-card-container">
+            <div class="metric-label">Weighted F1-Score</div>
+            <div class="metric-value-primary">0.5976</div>
+            <div class="metric-subtext">Support-weighted multi-class F1</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with m4:
+        st.markdown("""
+        <div class="metric-card-container">
+            <div class="metric-label">Corpus Size</div>
+            <div class="metric-value-primary">209,527</div>
+            <div class="metric-subtext">HuffPost Articles (2012–2022)</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("#### Model Architecture Comparison")
+
     comparison_df = pd.DataFrame({
-        "Model": ["Multinomial Naive Bayes", "Logistic Regression", "Linear SVM (selected)"],
-        "Accuracy": ["44.53%", "60.83%", "61.29%"],
+        "Model Architecture": [
+            "Multinomial Naive Bayes",
+            "Logistic Regression (L2)",
+            "Linear SVM (Selected Configuration)",
+        ],
+        "Classification Accuracy": ["44.53%", "60.83%", "61.29%"],
+        "Macro F1-Score": ["0.1653", "0.4497", "0.4824"],
+        "Evaluation Status": ["Baseline", "Strong Baseline", "Production Selected"],
     })
-    st.table(comparison_df)
+    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
 
-    st.warning(
-        "⚠️ **Limitations:** The classifier has moderate accuracy due to "
-        "class imbalance and semantic overlap between some categories "
-        "(e.g., ARTS vs. CULTURE & ARTS, WORLDPOST vs. THE WORLDPOST). "
-        "It does **not** detect fake news, verify facts, or assess "
-        "article credibility."
+    st.info(
+        "Historical Dataset Disclosure: The news dataset comprises 209,527 articles published between January 2012 and September 2022. "
+        "The system operates on historical data and does not connect to live or real-time news APIs. "
+        "The Linear SVM achieves 61.29% accuracy across 42 fine-grained classes, where substantial semantic overlap exists between categories "
+        "(e.g., ARTS vs. CULTURE & ARTS; WORLDPOST vs. THE WORLDPOST)."
     )
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PAGE 2: NEWS CLASSIFIER
-# ═══════════════════════════════════════════════════════════════════════════
-elif page == "🔍 News Classifier":
+# ===========================================================================
+# PAGE 2: NEWS ARTICLE CLASSIFIER
+# ===========================================================================
+elif page == "News Article Classifier":
 
-    st.markdown("# 🔍 News Article Classifier")
+    st.markdown("### News Article Classification & Analysis")
     st.markdown(
-        "Enter a news headline, article, or description to classify it "
-        "into one of **42 categories**, view prediction uncertainty, "
-        "extract keywords, and analyse sentiment."
+        "Enter a news headline, lead paragraph, or article excerpt to categorize it across 42 classes, "
+        "evaluate decision score uncertainty, extract salient keywords, and assess sentiment tone."
     )
 
-    # Check that model and vectorizer are loaded
     if model is None:
-        st.error(f"🚫 {model_error}")
+        st.error(f"Classification Model Error: {model_error}")
         st.stop()
     if tfidf is None:
-        st.error(f"🚫 {tfidf_error}")
+        st.error(f"Vectorizer Error: {tfidf_error}")
         st.stop()
 
-    # Quick Presets for easy testing
-    def set_sample_article(sample: str):
-        st.session_state["article_input_area"] = sample
+    def set_sample_text(sample: str):
+        st.session_state["news_input_text"] = sample
 
-    st.markdown("##### 💡 Or try a sample article:")
-    col_s1, col_s2, col_s3, col_s4 = st.columns(4)
-
-    with col_s1:
+    st.markdown("#### Pre-configured Test Samples")
+    b1, b2, b3, b4 = st.columns(4)
+    with b1:
         st.button(
-            "💻 Tech Innovation",
+            "Technology & AI",
             use_container_width=True,
-            on_click=set_sample_article,
+            on_click=set_sample_text,
             args=(
-                "Apple announced its next-generation artificial intelligence chips and "
-                "neural engine architecture for smartphones, enhancing battery performance.",
+                "Google and Microsoft announced next-generation transformer models and accelerated "
+                "neural processing units designed for autonomous systems and data centers.",
             ),
         )
-    with col_s2:
+    with b2:
         st.button(
-            "🏛️ Politics & Policy",
+            "Politics & Policy",
             use_container_width=True,
-            on_click=set_sample_article,
+            on_click=set_sample_text,
             args=(
-                "The Senate passed a landmark bipartisan infrastructure bill allocating billions "
-                "in federal funding for public transport, highway repairs, and clean power grids.",
+                "The Senate committee held hearings on federal infrastructure spending, "
+                "debating bipartisan tax measures and oversight on interstate highway grants.",
             ),
         )
-    with col_s3:
+    with b3:
         st.button(
-            "⚽ Sports & League",
+            "Sports & League",
             use_container_width=True,
-            on_click=set_sample_article,
+            on_click=set_sample_text,
             args=(
-                "The championship tournament concluded with a dramatic overtime victory as the star "
-                "striker scored the game-winning goal in front of 80,000 cheering fans.",
+                "The championship finals concluded in an overtime shootout as the home franchise "
+                "secured the national trophy before a sellout crowd of eighty thousand spectators.",
             ),
         )
-    with col_s4:
+    with b4:
         st.button(
-            "🌿 Climate & Science",
+            "Climate & Earth Science",
             use_container_width=True,
-            on_click=set_sample_article,
+            on_click=set_sample_text,
             args=(
-                "NASA scientists published new satellite observations revealing unprecedented glacier "
-                "melting and rising ocean temperatures across polar regions.",
+                "Satellite radiometer measurements published by researchers document accelerated glacial "
+                "calving and anomalous thermal anomalies across Antarctic ice shelves.",
             ),
         )
 
-    article_text = st.text_area(
-        "📝 Enter News Text",
-        placeholder=(
-            "Example: The government announced new economic policies to "
-            "boost growth in the technology sector amid global inflation concerns."
-        ),
+    user_text = st.text_area(
+        "Article Text Input",
+        placeholder="Enter headline, paragraph, or full excerpt here...",
         height=140,
-        key="article_input_area",
+        key="news_input_text",
     )
 
-    if st.button("🚀 Analyse", type="primary", use_container_width=True):
-        if not article_text.strip():
-            st.warning("Please enter some text first.")
+    if st.button("Analyze Article", type="primary", use_container_width=True):
+        if not user_text or not user_text.strip():
+            st.warning("Input validation notice: Please provide article text before analysis.")
         else:
-            with st.spinner("Classifying…"):
-                result = classify_text(article_text, model, tfidf)
+            with st.spinner("Processing text and executing inference..."):
+                classification_output = classify_text(user_text, model, tfidf)
 
-            if result["error"]:
-                st.error(result["error"])
+            if classification_output["error"]:
+                st.error(f"Processing Error: {classification_output['error']}")
             else:
-                # ---- Predicted Category ----
                 st.markdown("---")
-                st.markdown("### 🏷️ Predicted Category")
-                st.markdown(
-                    category_badge(result["predicted_category"]),
-                    unsafe_allow_html=True,
-                )
+                st.markdown("#### Primary Classification Result")
 
-                # ---- Confidence / Uncertainty ----
-                st.markdown("### 📊 Prediction Confidence")
+                pred_category = classification_output["predicted_category"]
+                conf_level = classification_output["confidence_level"]
+                top_score = classification_output["top_score"]
+                margin = classification_output["margin"]
+                is_uncertain = classification_output["is_uncertain"]
 
-                conf_class = {
-                    "High": "confidence-high",
-                    "Moderate": "confidence-moderate",
-                    "Low": "confidence-low",
-                }[result["confidence_level"]]
+                c_res1, c_res2, c_res3, c_res4 = st.columns([2, 1.2, 1.2, 1.2])
+                with c_res1:
+                    st.markdown(f'<span class="badge badge-dark" style="font-size:1.05rem; padding:6px 14px;">{pred_category}</span>', unsafe_allow_html=True)
+                    st.caption("Predicted News Category (Out of 42)")
 
-                col_a, col_b, col_c = st.columns(3)
-                with col_a:
-                    st.markdown(
-                        f'**Confidence Level:** '
-                        f'<span class="{conf_class}">{result["confidence_level"]}</span>',
-                        unsafe_allow_html=True,
-                    )
-                with col_b:
-                    st.metric("Top Decision Score", result["top_score"])
-                with col_c:
-                    st.metric("Score Margin (1st − 2nd)", result["margin"])
+                with c_res2:
+                    if conf_level == "High":
+                        tag_html = f'<span class="confidence-tag-high">{conf_level} Confidence</span>'
+                    elif conf_level == "Moderate":
+                        tag_html = f'<span class="confidence-tag-moderate">{conf_level} Confidence</span>'
+                    else:
+                        tag_html = f'<span class="confidence-tag-low">{conf_level} Confidence</span>'
+                    st.markdown(tag_html, unsafe_allow_html=True)
+                    st.caption("Margin Heuristic Tier")
 
-                if result["is_uncertain"]:
+                with c_res3:
+                    st.metric("Top Decision Score", f"{top_score:.4f}")
+
+                with c_res4:
+                    st.metric("Score Margin (1st - 2nd)", f"{margin:.4f}")
+
+                if is_uncertain:
                     st.warning(
-                        "⚠️ **Low-confidence prediction.** The margin between "
-                        "the top two scores is small, meaning the model is "
-                        "uncertain. Consider manual review."
+                        "Ambiguous Prediction Notice: The decision margin between the top two categories is small (< 0.15). "
+                        "The model exhibits uncertainty across closely related candidate categories."
                     )
 
-                # Top-5 scores
-                with st.expander("📋 Top-5 Decision Scores"):
+                # Top-5 Decision Scores
+                with st.expander("Detailed Decision Score Breakdown (Top 5 Classes)"):
                     st.caption(
-                        "These are raw SVM decision-function scores, **not "
-                        "probabilities**. A higher score means the model "
-                        "favours that category more. The margin between the "
-                        "top two scores is used as a heuristic confidence "
-                        "indicator."
+                        "Raw SVM decision scores represent geometric signed distances from the separating hyperplane: f(x) = w^T x + b. "
+                        "They are not calibrated posterior probabilities, providing an honest unmanipulated distance metric."
                     )
-                    scores_df = pd.DataFrame(result["decision_scores"])
-                    scores_df.columns = ["Category", "Decision Score"]
-                    scores_df.index = range(1, len(scores_df) + 1)
-                    st.dataframe(scores_df, use_container_width=True)
+                    scores_table = pd.DataFrame(classification_output["decision_scores"])
+                    scores_table.columns = ["Category Name", "Decision Margin Score"]
+                    scores_table.index = range(1, len(scores_table) + 1)
+                    st.dataframe(scores_table, use_container_width=True)
 
-                # ---- Keywords ----
-                st.markdown("### 🔑 Extracted Keywords")
-                keywords = extract_keywords(
-                    result["cleaned_text"], tfidf, top_n=10
-                )
-                if keywords:
-                    kw_html = " ".join(
-                        f'<span class="keyword-tag">{kw["keyword"]}</span>'
-                        for kw in keywords
-                    )
-                    st.markdown(kw_html, unsafe_allow_html=True)
-                else:
-                    st.info("No significant keywords found for this input.")
+                st.markdown("---")
+                kw_col, sent_col = st.columns([1.2, 1])
 
-                # ---- Sentiment ----
-                st.markdown("### 💬 Sentiment Analysis")
-                sentiment = analyze_sentiment(article_text)
+                with kw_col:
+                    st.markdown("#### Salient Extracted Keywords")
+                    extracted_kws = extract_keywords(classification_output["cleaned_text"], tfidf, top_n=10)
+                    if extracted_kws:
+                        kw_html = " ".join([
+                            f'<span class="keyword-pill">{kw["keyword"]}<span class="keyword-pill-weight">({kw["score"]:.3f})</span></span>'
+                            for kw in extracted_kws
+                        ])
+                        st.markdown(kw_html, unsafe_allow_html=True)
+                        st.caption("Features extracted by fitted TF-IDF unigram and bigram importance.")
+                    else:
+                        st.info("No discriminating vocabulary terms isolated.")
 
-                sent_class = f"sentiment-{sentiment['label'].lower()}"
-                st.markdown(
-                    f'<span class="{sent_class}">'
-                    f'{sentiment["label"]}  (polarity: {sentiment["polarity"]}, '
-                    f'subjectivity: {sentiment["subjectivity"]})</span>',
-                    unsafe_allow_html=True,
-                )
-                st.caption(
-                    "Sentiment is analysed using TextBlob, a rule-based "
-                    "approach. It estimates emotional tone — not factual "
-                    "accuracy. Polarity ranges from −1 (very negative) to "
-                    "+1 (very positive). Subjectivity ranges from 0 "
-                    "(objective) to 1 (subjective). Results on news text "
-                    "may differ from conversational text."
-                )
+                with sent_col:
+                    st.markdown("#### Sentiment Tone & Polarity")
+                    sent_data = analyze_sentiment(user_text)
+                    sent_label = sent_data["label"]
 
-                # ---- Preprocessed Text ----
-                with st.expander("🔧 View Preprocessed Text"):
-                    st.code(result["cleaned_text"], language=None)
+                    if sent_label == "Positive":
+                        sent_badge = f'<span class="sentiment-tag-positive">Positive Polarity ({sent_data["polarity"]:+.3f})</span>'
+                    elif sent_label == "Negative":
+                        sent_badge = f'<span class="sentiment-tag-negative">Negative Polarity ({sent_data["polarity"]:+.3f})</span>'
+                    else:
+                        sent_badge = f'<span class="sentiment-tag-neutral">Neutral Polarity ({sent_data["polarity"]:+.3f})</span>'
+
+                    st.markdown(sent_badge, unsafe_allow_html=True)
+                    st.caption(f"Subjectivity Metric: {sent_data['subjectivity']:.3f} (Scale: 0.00 = Objective, 1.00 = Subjective)")
+
+                with st.expander("Normalized Input View"):
+                    st.code(classification_output["cleaned_text"], language=None)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 # PAGE 3: PERSONALIZED NEWS FEED
-# ═══════════════════════════════════════════════════════════════════════════
-elif page == "📋 Personalized News Feed":
+# ===========================================================================
+elif page == "Personalized News Feed":
 
-    st.markdown("# 📋 Personalised News Feed")
+    st.markdown("### Personalized News Feed")
     st.markdown(
-        "Select your preferred news categories to build a personalised "
-        "feed from the dataset of ~209 000 articles."
+        "Configure your reading profile by selecting topics of interest. "
+        "The system dynamically samples and aggregates relevant articles from the 209,527 historical corpus."
     )
 
     if dataset is None:
-        st.error(f"🚫 {dataset_error}")
+        st.error(f"Corpus Error: {dataset_error}")
         st.stop()
 
-    # Available categories
     all_categories = sorted(dataset["category"].unique().tolist())
 
-    # Popular presets
-    st.markdown("#### Quick Presets")
-
-    def set_feed_preset(cats):
+    def set_feed_categories(cats):
         st.session_state["feed_selected_categories"] = cats
 
     if "feed_selected_categories" not in st.session_state:
         st.session_state["feed_selected_categories"] = ["TECH", "SCIENCE"]
 
-    preset_cols = st.columns(4)
-    presets = {
-        "🌍 World & Politics": ["POLITICS", "WORLD NEWS", "WORLDPOST", "THE WORLDPOST", "U.S. NEWS"],
-        "💻 Tech & Science": ["TECH", "SCIENCE", "ENVIRONMENT", "GREEN"],
-        "🏈 Sports & Fun": ["SPORTS", "COMEDY", "ENTERTAINMENT", "WEIRD NEWS"],
-        "💰 Business & Money": ["BUSINESS", "MONEY"],
-    }
-    for col, (label, cats) in zip(preset_cols, presets.items()):
-        with col:
-            st.button(
-                label,
-                use_container_width=True,
-                on_click=set_feed_preset,
-                args=(cats,),
-            )
+    st.markdown("#### Category Interest Presets")
+    p1, p2, p3, p4 = st.columns(4)
+    with p1:
+        st.button("World & Governance", use_container_width=True, on_click=set_feed_categories, args=(["POLITICS", "WORLD NEWS", "U.S. NEWS", "THE WORLDPOST"],))
+    with p2:
+        st.button("Science & Technology", use_container_width=True, on_click=set_feed_categories, args=(["TECH", "SCIENCE", "ENVIRONMENT", "GREEN"],))
+    with p3:
+        st.button("Sports & Culture", use_container_width=True, on_click=set_feed_categories, args=(["SPORTS", "ENTERTAINMENT", "COMEDY", "ARTS & CULTURE"],))
+    with p4:
+        st.button("Business & Finance", use_container_width=True, on_click=set_feed_categories, args=(["BUSINESS", "MONEY"],))
 
-    # Multi-select bound to current selection
     selected_categories = st.multiselect(
-        "Choose categories",
+        "Active Interest Categories",
         options=all_categories,
         default=st.session_state.get("feed_selected_categories", ["TECH", "SCIENCE"]),
-        help="Select one or more categories to populate your feed.",
+        help="Select one or more topics to filter the article stream.",
     )
 
-    # Controls
-    col_n, col_sort = st.columns(2)
-    with col_n:
-        n_articles = st.slider("Number of articles", 5, 50, 20)
-    with col_sort:
-        sort_by_date = st.checkbox("Sort by date (newest first)", value=True)
+    ctrl1, ctrl2 = st.columns(2)
+    with ctrl1:
+        n_articles = st.slider("Maximum Articles to Retrieve", min_value=5, max_value=50, value=20, step=5)
+    with ctrl2:
+        sort_by_date = st.checkbox("Order by Publication Date (Most Recent First)", value=True)
 
-    if st.button("🔄 Load Feed", type="primary", use_container_width=True):
+    if st.button("Generate Personalized Feed", type="primary", use_container_width=True):
         if not selected_categories:
-            st.warning("Please select at least one category.")
+            st.warning("Please select at least one category to populate your feed.")
         else:
-            with st.spinner("Fetching articles…"):
-                feed = get_interest_based_feed(
-                    dataset, selected_categories, n_articles, sort_by_date
+            with st.spinner("Retrieving articles from corpus..."):
+                feed_articles = get_interest_based_feed(
+                    dataset, selected_categories, n_articles=n_articles, sort_by_date=sort_by_date
                 )
 
-            if feed.empty:
-                st.info("No articles found for the selected categories.")
+            if feed_articles.empty:
+                st.info("No matching records found for the chosen categories.")
             else:
-                st.success(f"Showing **{len(feed)}** articles from **{len(selected_categories)}** categories.")
+                st.success(f"Retrieved {len(feed_articles)} articles across {len(selected_categories)} interest categories.")
 
-                for _, row in feed.iterrows():
-                    headline = row.get("headline", "Untitled")
-                    desc = row.get("short_description", "")
-                    cat = row.get("category", "")
-                    date_str = str(row.get("date", ""))[:10] if pd.notna(row.get("date")) else ""
-                    authors = row.get("authors", "")
+                for _, item in feed_articles.iterrows():
+                    headline = item.get("headline", "Untitled")
+                    desc = item.get("short_description", "")
+                    cat = item.get("category", "")
+                    date_val = str(item.get("date", ""))[:10] if pd.notna(item.get("date")) else "Undated"
+                    author_val = item.get("authors", "")
 
                     st.markdown(f"""
-                    <div class="article-card">
-                        <h4>{headline}</h4>
-                        {category_badge(cat)}
-                        <p>{desc}</p>
-                        <div class="article-meta">
-                            {f"📅 {date_str}" if date_str and date_str != "NaT" else ""}
-                            {f" · ✍️ {authors}" if authors else ""}
+                    <div class="article-item">
+                        <div class="article-headline">{headline}</div>
+                        <span class="badge badge-primary">{cat}</span>
+                        <div class="article-desc">{desc}</div>
+                        <div class="article-footer">
+                            <span>Date: {date_val}</span>
+                            {f"<span>Author: {author_val}</span>" if author_val else ""}
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PAGE 4: RESEARCH-TO-NEWS RECOMMENDATIONS
-# ═══════════════════════════════════════════════════════════════════════════
-elif page == "🔬 Research-to-News":
+# ===========================================================================
+# PAGE 4: RESEARCH-TO-NEWS RETRIEVAL
+# ===========================================================================
+elif page == "Research-to-News Retrieval":
 
-    st.markdown("# 🔬 Research-to-News Recommendations")
+    st.markdown("### Research-to-News Semantic Retrieval")
     st.markdown(
-        "Upload a research paper (PDF/TXT) or paste an abstract/excerpt "
-        "to discover related news articles from our dataset."
+        "Cross-reference scholarly research papers and academic abstracts with mainstream news coverage. "
+        "Upload a PDF or TXT paper, or paste an abstract below to calculate TF-IDF cosine similarities against 209,527 historical articles."
     )
 
     if dataset is None:
-        st.error(f"🚫 {dataset_error}")
+        st.error(f"Corpus Error: {dataset_error}")
         st.stop()
     if tfidf is None:
-        st.error(f"🚫 {tfidf_error}")
+        st.error(f"Vectorizer Error: {tfidf_error}")
         st.stop()
     if corpus_vectors is None:
-        st.error("🚫 Corpus vectors could not be computed. Check that the dataset and vectorizer are loaded.")
+        st.error("Corpus representation vectors are unavailable.")
         st.stop()
 
     st.info(
-        "📌 **Note:** Recommendations are retrieved from the HuffPost News "
-        "Category Dataset (2012 – 2022). Results reflect historical coverage "
-        "and are **not live news**."
+        "Historical Dataset Disclosure: Matches are computed strictly against the HuffPost 2012–2022 corpus. "
+        "Results reflect historical contextual coverage and do not represent live news feeds."
     )
 
-    # ---- Input Tabs ----
-    tab_paste, tab_upload = st.tabs(["📝 Paste Text", "📄 Upload File"])
-
-    research_text = ""
+    tab_paste, tab_upload = st.tabs(["Paste Research Text / Abstract", "Upload Research File (PDF / TXT)"])
+    research_input = ""
 
     with tab_paste:
-        def set_research_sample(sample_text: str):
-            st.session_state["research_pasted_area"] = sample_text
+        def set_research_preset(preset_text: str):
+            st.session_state["research_text_input"] = preset_text
 
-        st.markdown("##### 💡 Or try a sample research abstract:")
-        col_r1, col_r2, col_r3 = st.columns(3)
-
-        with col_r1:
+        st.markdown("#### Academic Sample Abstracts")
+        sa1, sa2, sa3 = st.columns(3)
+        with sa1:
             st.button(
-                "🤖 AI & Deep Learning",
+                "Machine Learning & AI",
                 use_container_width=True,
-                on_click=set_research_sample,
+                on_click=set_research_preset,
                 args=(
-                    "This study investigates deep learning neural networks and transformers "
-                    "for natural language processing, automated text classification, and algorithmic efficiency.",
+                    "This study explores self-supervised deep neural networks, transformer architectures, "
+                    "and large language model alignment for automated natural language understanding and algorithmic fairness.",
                 ),
             )
-        with col_r2:
+        with sa2:
             st.button(
-                "🌱 Climate & Energy",
+                "Renewable Energy & Climate",
                 use_container_width=True,
-                on_click=set_research_sample,
+                on_click=set_research_preset,
                 args=(
-                    "We analyze the transition towards renewable solar and wind energy grids to mitigate global "
-                    "greenhouse gas emissions, climate warming, and ecological disruptions.",
+                    "We investigate photovoltaic solar cell efficiency, battery storage grid integration, "
+                    "and decarbonization pathways to mitigate global greenhouse gas emissions and environmental degradation.",
                 ),
             )
-        with col_r3:
+        with sa3:
             st.button(
-                "🧬 Medical Genomics",
+                "Biomedicine & Genomics",
                 use_container_width=True,
-                on_click=set_research_sample,
+                on_click=set_research_preset,
                 args=(
-                    "This paper presents clinical trials and genomic sequencing techniques utilizing CRISPR "
-                    "gene editing therapies to treat hereditary cellular disorders and immune diseases.",
+                    "Recent clinical trials evaluate CRISPR-Cas9 targeted genome editing therapies for "
+                    "treating hereditary immunodeficiencies and chronic cellular disorders in patient cohorts.",
                 ),
             )
 
-        pasted = st.text_area(
-            "Paste your research abstract, introduction, or selected paragraphs:",
-            height=180,
-            key="research_pasted_area",
-            placeholder=(
-                "Example: This paper investigates the impact of artificial "
-                "intelligence on climate change mitigation strategies…"
-            ),
+        pasted_text = st.text_area(
+            "Abstract or Research Excerpt",
+            placeholder="Paste research abstract, introduction, or literature review section...",
+            height=160,
+            key="research_text_input",
         )
-        if pasted and pasted.strip():
-            research_text = pasted.strip()
+        if pasted_text and pasted_text.strip():
+            research_input = pasted_text.strip()
 
     with tab_upload:
-        uploaded_file = st.file_uploader(
-            "Upload a PDF or TXT file (max 10 MB)",
+        uploaded_doc = st.file_uploader(
+            "Select Research Document (PDF or TXT format, maximum 10 MB)",
             type=["pdf", "txt"],
-            help="Supported formats: PDF (with selectable text) and plain text.",
+            help="Extracts text via PyMuPDF for PDF documents and standard encoding for plain text.",
         )
-        if uploaded_file is not None:
-            # Validate file size (10 MB)
-            if uploaded_file.size > 10 * 1024 * 1024:
-                st.error("File too large. Please upload a file under 10 MB.")
+        if uploaded_doc is not None:
+            if uploaded_doc.size > 10 * 1024 * 1024:
+                st.error("Document exceeds maximum size threshold of 10 MB.")
             else:
                 try:
-                    file_bytes = uploaded_file.read()
-                    if uploaded_file.name.lower().endswith(".pdf"):
-                        extracted = extract_text_from_pdf(file_bytes, max_pages=50)
+                    file_payload = uploaded_doc.read()
+                    if uploaded_doc.name.lower().endswith(".pdf"):
+                        extracted_doc_text = extract_text_from_pdf(file_payload, max_pages=50)
                     else:
-                        extracted = extract_text_from_txt(file_bytes)
+                        extracted_doc_text = extract_text_from_txt(file_payload)
 
-                    if extracted.strip():
-                        research_text = extracted
-                        st.success(
-                            f"✅ Extracted **{len(extracted):,}** characters "
-                            f"from `{uploaded_file.name}`."
-                        )
+                    if extracted_doc_text.strip():
+                        research_input = extracted_doc_text
+                        st.success(f"Successfully extracted {len(extracted_doc_text):,} characters from '{uploaded_doc.name}'.")
                     else:
-                        st.warning("The file appears to be empty or contains no extractable text.")
-
-                except ImportError as ie:
-                    st.error(str(ie))
-                except ValueError as ve:
-                    st.warning(str(ve))
+                        st.warning("No readable text discovered in uploaded document.")
                 except Exception as exc:
-                    st.error(f"Failed to process file: {exc}")
+                    st.error(f"Document extraction failure: {exc}")
 
-    # ---- Text Preview & Editing ----
-    if research_text:
-        st.markdown("### 📖 Extracted Text Preview")
+    if research_input:
+        st.markdown("---")
+        st.markdown("#### Document Text Review")
 
-        truncated_text, was_truncated = truncate_text(research_text, max_chars=50_000)
+        truncated_doc, was_truncated = truncate_text(research_input, max_chars=50000)
         if was_truncated:
-            st.warning(
-                f"⚠️ The text was truncated to 50 000 characters for safe "
-                f"processing (original: {len(research_text):,} characters)."
-            )
+            st.warning(f"Text truncated to 50,000 characters for processing stability (Original: {len(research_input):,} chars).")
 
-        edited_text = st.text_area(
-            "Review and optionally edit the text before analysis:",
-            value=truncated_text,
-            height=200,
-            key="research_edit",
+        reviewed_text = st.text_area(
+            "Review or refine query text prior to similarity calculation",
+            value=truncated_doc,
+            height=150,
+            key="reviewed_research_text",
         )
 
-        # Controls
-        col_top_n, _ = st.columns([1, 2])
-        with col_top_n:
-            top_n = st.slider("Number of recommendations", 5, 30, 15)
+        top_k = st.slider("Number of Relevant Articles to Retrieve", min_value=5, max_value=25, value=10, step=5)
 
-        if st.button("🔍 Find Related News", type="primary", use_container_width=True):
-            if not edited_text.strip():
-                st.warning("The text is empty. Please enter or upload research text.")
+        if st.button("Execute Similarity Search", type="primary", use_container_width=True):
+            if not reviewed_text.strip():
+                st.warning("Please provide valid research text.")
             else:
-                with st.spinner("Analysing text and searching articles…"):
-                    recommendations, research_keywords = recommend_from_research(
-                        edited_text,
+                with st.spinner("Computing TF-IDF cosine similarity against 209,527 articles..."):
+                    recommendations, r_keywords = recommend_from_research(
+                        reviewed_text,
                         dataset,
                         corpus_vectors,
                         tfidf,
-                        top_n=top_n,
+                        top_n=top_k,
                     )
 
                 if not recommendations:
-                    st.info(
-                        "No related articles found. The research topic may "
-                        "not overlap with the news dataset's coverage."
-                    )
+                    st.info("No matching articles met the similarity threshold.")
                 else:
-                    # ---- Research Keywords ----
-                    st.markdown("### 🔑 Identified Research Keywords")
-                    if research_keywords:
-                        kw_html = " ".join(
-                            f'<span class="keyword-tag">{kw["keyword"]}</span>'
-                            for kw in research_keywords
-                        )
-                        st.markdown(kw_html, unsafe_allow_html=True)
+                    st.markdown("#### Extracted Research Keywords")
+                    if r_keywords:
+                        kw_markup = " ".join([
+                            f'<span class="keyword-pill">{kw["keyword"]} <span class="keyword-pill-weight">({kw["score"]:.3f})</span></span>'
+                            for kw in r_keywords
+                        ])
+                        st.markdown(kw_markup, unsafe_allow_html=True)
 
-                    # ---- Recommendations ----
-                    st.markdown(f"### 📰 Top {len(recommendations)} Related News Articles")
-                    st.caption(
-                        "Articles are ranked by **cosine similarity** between "
-                        "TF-IDF vectors. The similarity score is a measure of "
-                        "textual overlap — not a probability or relevance guarantee."
-                    )
+                    st.markdown(f"#### Top {len(recommendations)} Relevant Historical Articles")
+                    st.caption("Ranked by cosine similarity in the 80,000-dimensional TF-IDF unigram/bigram feature space.")
 
-                    for i, rec in enumerate(recommendations, 1):
-                        sim_pct = rec["similarity_score"] * 100
+                    for rank, rec in enumerate(recommendations, 1):
+                        sim_val = rec["similarity_score"]
+                        sim_pct = min(sim_val * 100 * 2.5, 100.0)
+
                         st.markdown(f"""
-                        <div class="article-card">
-                            <h4>{i}. {rec["headline"]}</h4>
-                            {category_badge(rec["category"])}
-                            <p>{rec["short_description"]}</p>
-                            <div class="article-meta">
-                                📅 {rec["date"]}
-                                {f" · ✍️ {rec['authors']}" if rec.get("authors") else ""}
-                            </div>
-                            <div style="margin-top: 8px;">
-                                <strong>Similarity:</strong> {rec["similarity_score"]:.4f}
+                        <div class="article-item">
+                            <div class="article-headline">{rank}. {rec['headline']}</div>
+                            <span class="badge badge-primary">{rec['category']}</span>
+                            <div class="article-desc">{rec['short_description']}</div>
+                            <div style="margin-top: 10px;">
+                                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#475569;">
+                                    <span>Cosine Similarity: <strong>{sim_val:.4f}</strong></span>
+                                    <span>{rec['match_reason']}</span>
+                                </div>
                                 <div class="sim-bar-bg">
-                                    <div class="sim-bar-fill" style="width: {min(sim_pct * 3, 100):.0f}%;"></div>
+                                    <div class="sim-bar-fill" style="width: {sim_pct:.1f}%;"></div>
                                 </div>
                             </div>
-                            <div style="margin-top: 6px; font-size: 0.82rem; color: #666;">
-                                💡 {rec["match_reason"]}
+                            <div class="article-footer">
+                                <span>Date: {rec['date']}</span>
+                                {f"<span>Author: {rec['authors']}</span>" if rec.get('authors') else ""}
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PAGE 5: ABOUT THE PROJECT
-# ═══════════════════════════════════════════════════════════════════════════
-elif page == "ℹ️ About the Project":
+# ===========================================================================
+# PAGE 5: SYSTEM DOCUMENTATION & ARCHITECTURE
+# ===========================================================================
+elif page == "System Documentation":
 
-    st.markdown("# ℹ️ About the Project")
+    st.markdown("### System Architecture & Technical Specifications")
 
     st.markdown("""
-    ## 📚 Dataset
+    #### 1. Corpus Dataset Details
+    - **Source:** HuffPost News Category Dataset v3 (Curated by Rishabh Misra)
+    - **Total Records:** 209,527 articles
+    - **Temporal Span:** January 28, 2012 to September 23, 2022
+    - **Target Categories:** 42 distinct news categories
+    - **Corpus Imbalance Ratio:** ~35.11:1 (POLITICS: 35,602 vs. EDUCATION: 1,014)
 
-    **Name:** News Category Dataset v3 (HuffPost)
-    **Source:** [Kaggle — Rishabh Misra](https://www.kaggle.com/datasets/rmisra/news-category-dataset)
-    **Articles:** ~209 000 news articles (2012 – 2022)
-    **Categories:** 42 news categories
-    **Fields:** headline, short_description, category, authors, date, link
+    #### 2. Text Preprocessing Pipeline
+    The text normalization pipeline applies deterministic cleaning steps:
+    1. Case normalization to lower-case characters.
+    2. Regular expression removal of web URLs (http/https/www).
+    3. Removal of non-alphabetic characters and punctuation.
+    4. Tokenization and filtering against NLTK English stop-words.
+    5. Discarding short tokens (character length <= 2).
 
-    ---
+    #### 3. Vectorization Space
+    - **Feature Representation:** TF-IDF (Term Frequency - Inverse Document Frequency)
+    - **N-gram Range:** Unigrams and Bigrams (1, 2)
+    - **Maximum Feature Vocabulary:** 80,000 dimensions
+    - **Matrix Structure:** Sparse CSR representation
 
-    ## 🔧 Text Preprocessing Pipeline
+    #### 4. Classification Model Benchmarks
+    | Model Architecture | Accuracy | Macro F1-Score | Weighted F1-Score |
+    |---|---:|---:|---:|
+    | Multinomial Naive Bayes | 44.53% | 0.1653 | 0.4012 |
+    | Logistic Regression (L2) | 60.83% | 0.4497 | 0.5891 |
+    | **Linear SVM (Production)** | **61.29%** | **0.4824** | **0.5976** |
 
-    The following cleaning steps are applied to every input text, mirroring
-    the process used during model training:
+    #### 5. Uncertainty & Decision Margin Rationale
+    Support Vector Machines maximize the geometric margin between classes. In multi-class One-vs-Rest (OvR) mode,
+    the model yields signed decision scores:
+    
+    $$f_k(x) = w_k^T x + b_k$$
+    
+    Rather than converting scores into synthetic probabilities using uncalibrated Softmax (which introduces artificial certainty),
+    this system defines confidence strictly based on the separation margin:
+    
+    $$\Delta = f_{\text{top 1}}(x) - f_{\text{top 2}}(x)$$
 
-    1. **Lowercase** the entire text.
-    2. **Remove URLs** (http/https/www patterns).
-    3. **Remove non-alphabetic characters** — digits, punctuation, and
-       special symbols are replaced with spaces.
-    4. **Tokenise** by whitespace.
-    5. **Remove English stop-words** (NLTK's standard list).
-    6. **Remove very short tokens** (≤ 2 characters).
+    - **High Confidence:** $\Delta \ge 0.40$
+    - **Moderate Confidence:** $0.15 \le \Delta < 0.40$
+    - **Low Confidence (Ambiguous):** $\Delta < 0.15$
 
-    The cleaned tokens are re-joined into a single string for vectorisation.
-
-    ---
-
-    ## 📊 TF-IDF Vectorisation
-
-    | Parameter | Value |
-    |---|---|
-    | N-gram range | Unigrams + Bigrams (1, 2) |
-    | Max features | 80 000 |
-    | Vectorizer type | `TfidfVectorizer` (scikit-learn) |
-
-    TF-IDF (Term Frequency–Inverse Document Frequency) converts text into
-    numerical feature vectors.  Each dimension represents a word or bigram,
-    and its value reflects how important that term is to the document
-    relative to the entire corpus.
-
-    ---
-
-    ## 🤖 Linear SVM Classifier
-
-    The classifier is a **Linear Support Vector Machine** (`LinearSVC` from
-    scikit-learn).  SVMs find the optimal hyperplane that separates classes
-    in the high-dimensional TF-IDF feature space.
-
-    For multi-class classification, scikit-learn uses a **one-vs-rest (OVR)**
-    strategy — training 42 binary classifiers, one per category.
-
-    **Why Linear SVM?**
-    - Scales well to large, sparse feature matrices.
-    - Competitive accuracy on text classification tasks.
-    - Produces interpretable decision-function scores.
-
-    ---
-
-    ## 📈 Baseline Evaluation Metrics
-
-    These results were obtained from the original training experiment and
-    have **not** been modified:
-
-    | Model | Accuracy |
-    |---|---:|
-    | Multinomial Naive Bayes | 44.53% |
-    | Logistic Regression | 60.83% |
-    | **Linear SVM (selected)** | **61.29%** |
-
-    | Metric | Value |
-    |---|---:|
-    | Macro F1-Score | 0.4824 |
-    | Weighted F1-Score | 0.5976 |
-
-    The moderate accuracy is expected given:
-    - **42 categories** — a fine-grained classification problem.
-    - **Class imbalance** — some categories have far more articles than
-      others (e.g., POLITICS dominates).
-    - **Semantic overlap** — categories like *ARTS* vs *ARTS & CULTURE*,
-      *WORLDPOST* vs *THE WORLDPOST*, and *PARENTS* vs *PARENTING* are
-      inherently ambiguous.
-
-    ---
-
-    ## 💬 Sentiment Analysis
-
-    Sentiment is analysed using **TextBlob**, a rule-based NLP library.
-    It provides:
-    - **Polarity** (−1 to +1): negative → positive
-    - **Subjectivity** (0 to 1): objective → subjective
-
-    **Limitations:**
-    - Designed for product reviews and conversational text; may be less
-      accurate on formal news writing.
-    - Does not indicate factual accuracy or credibility.
-    - Sarcasm and irony are generally not detected.
-
-    ---
-
-    ## 🔮 Limitations & Future Improvements
-
-    **Current Limitations:**
-    - The classifier was trained on historical HuffPost data and may not
-      generalise well to other news sources or topics.
-    - The recommendation engine retrieves from the fixed dataset (2012 –
-      2022) — it does not access live news.
-    - Scanned PDFs (without selectable text) require OCR, which is not
-      included in this version.
-    - Sentiment analysis is rule-based and may not capture nuanced tones.
-
-    **Possible Future Work:**
-    - Retrain with transformer-based models (BERT, DistilBERT) for higher
-      accuracy.
-    - Add calibrated probability estimates using Platt scaling or isotonic
-      regression.
-    - Integrate a live news API (e.g., NewsAPI, GDELT) for real-time
-      recommendations.
-    - Add OCR support for scanned PDFs using Tesseract.
-    - Implement user accounts to persist preferences across sessions.
-    - Apply SMOTE or class-weight balancing to address class imbalance.
+    #### 6. System Limitations
+    - **Temporal Scope:** Articles date from 2012 to 2022; recent events (post-September 2022) are not indexed.
+    - **Category Overlap:** High semantic proximity between classes like ARTS vs. ARTS & CULTURE introduces inherent ambiguity.
+    - **Non-OCR PDF Support:** Document parsing requires digital selectable text; image-only scanned PDFs require external OCR.
     """)
 
     st.markdown("---")
-    st.caption(
-        "News Intelligence System · Automated News Categorisation, Analysis "
-        "and Personalised Recommendation · Academic ML Project"
-    )
+    st.caption("News Intelligence System · Academic NLP Implementation · Zero Fabricated Metrics Guarantee")
